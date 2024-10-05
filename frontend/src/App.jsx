@@ -45,7 +45,7 @@
 
 import { useState, useEffect } from "react";
 import { create } from "zustand";
-import axios from "axios";
+// import axios from "axios";
 import {
   Collapsible,
   CollapsibleContent,
@@ -53,34 +53,61 @@ import {
 } from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Progress } from "@/components/ui/progress";
+import { InfoCircledIcon } from "@radix-ui/react-icons";
 import PropTypes from "prop-types";
+
+const MAX_SELECTIONS = 5;
+
 // Zustand store
 const useVoteStore = create((set) => ({
   options: [],
   setOptions: (options) => set({ options }),
   selectedOptions: [],
   toggleOption: (id) =>
-    set((state) => ({
-      selectedOptions: state.selectedOptions.includes(id)
-        ? state.selectedOptions.filter((optionId) => optionId !== id)
-        : [...state.selectedOptions, id],
-    })),
+    set((state) => {
+      if (state.selectedOptions.includes(id)) {
+        return {
+          selectedOptions: state.selectedOptions.filter(
+            (optionId) => optionId !== id
+          ),
+        };
+      } else if (state.selectedOptions.length < MAX_SELECTIONS) {
+        return { selectedOptions: [...state.selectedOptions, id] };
+      }
+      return state;
+    }),
 }));
 
-const OptionItem = ({ option }) => {
+const OptionItem = ({ option, index }) => {
   const [isOpen, setIsOpen] = useState(false);
   const toggleOption = useVoteStore((state) => state.toggleOption);
+  const selectedOptions = useVoteStore((state) => state.selectedOptions);
+  const isSelected = selectedOptions.includes(option.id);
 
   return (
-    <Collapsible open={isOpen} onOpenChange={setIsOpen} className="mb-2">
+    <Collapsible
+      open={isOpen}
+      onOpenChange={setIsOpen}
+      className="mb-2"
+      id={`option-${index + 1}`}
+    >
       <CollapsibleTrigger className="flex items-center justify-between w-full p-2 bg-gray-100 rounded-md">
         <span>{option.title}</span>
         <span>{isOpen ? "▲" : "▼"}</span>
       </CollapsibleTrigger>
       <CollapsibleContent className="p-2 bg-white">
         <p>{option.description}</p>
-        <Button onClick={() => toggleOption(option.id)} className="mt-2">
-          Select
+        <Button
+          onClick={() => {
+            toggleOption(option.id);
+            // setTimeout(() => setIsOpen(!isOpen), 1000),
+            // clearTimeout();
+          }}
+          className={`mt-2 ${isSelected ? "bg-green-500" : ""}`}
+        >
+          {isSelected ? "Selected" : "Select"}
         </Button>
       </CollapsibleContent>
     </Collapsible>
@@ -89,13 +116,21 @@ const OptionItem = ({ option }) => {
 
 OptionItem.propTypes = {
   option: PropTypes.object.isRequired,
+  index: PropTypes.number.isRequired,
 };
 
 const SideScroll = ({ totalOptions }) => {
   const scrollNumbers = Array.from(
     { length: Math.ceil(totalOptions / 10) },
-    (_, i) => (i + 1) * 10
+    (_, i) => (i === 0 ? 1 : i * 10)
   );
+
+  const handleScroll = (number) => {
+    const element = document.getElementById(`option-${number}`);
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth" });
+    }
+  };
 
   return (
     <div className="fixed right-0 top-1/2 transform -translate-y-1/2 bg-gray-200 p-2 rounded-l-md">
@@ -103,6 +138,7 @@ const SideScroll = ({ totalOptions }) => {
         <div
           key={number}
           className="text-sm cursor-pointer hover:bg-gray-300 p-1"
+          onClick={() => handleScroll(number)}
         >
           {number}
         </div>
@@ -150,11 +186,12 @@ const mockOptions = [
 
 const VotingPage = () => {
   const { options, setOptions, selectedOptions } = useVoteStore();
+  const [showAlert, setShowAlert] = useState(false);
 
   useEffect(() => {
     const fetchOptions = async () => {
       try {
-        const response = await axios.get("/api/options");
+        // const response = await axios.get("/api/options");
         setOptions(mockOptions);
       } catch (error) {
         console.error("Error fetching options:", error);
@@ -162,19 +199,31 @@ const VotingPage = () => {
     };
 
     fetchOptions();
-  }, [setOptions]);
+  }, []);
+
+  useEffect(() => {
+    if (selectedOptions.length === MAX_SELECTIONS) {
+      setShowAlert(true);
+      const timer = setTimeout(() => setShowAlert(false), 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [selectedOptions]);
 
   const handleSubmit = () => {
     console.log("Selected options:", selectedOptions);
     // Here you would typically send the selectedOptions to your backend
   };
 
+  const progress = (selectedOptions.length / MAX_SELECTIONS) * 100;
+
   return (
-    <div className="container mx-auto p-4 pb-16">
+    <div className="container mx-20 p-4 pb-16">
       <h1 className="text-2xl font-bold mb-4">Voting Options</h1>
-      <ScrollArea className="h-[calc(100vh-200px)]">
-        {options.map((option) => (
-          <OptionItem key={option.id} option={option} />
+      <Progress value={progress} className="mb-4" />
+      <p className="mb-4">Selected: {selectedOptions.length} </p>
+      <ScrollArea className="h-[calc(100vh-200px)] p-4 w-full">
+        {options.map((option, index) => (
+          <OptionItem key={option.id} option={option} index={index} />
         ))}
       </ScrollArea>
       <SideScroll totalOptions={options.length} />
@@ -183,6 +232,15 @@ const VotingPage = () => {
           Submit Vote
         </Button>
       </div>
+      {showAlert && (
+        <Alert className="fixed top-4 right-4 self-center w-72 bg-red-200">
+          <InfoCircledIcon className="w-6 h-6" />
+          <AlertTitle className="p-2">Max selections reached</AlertTitle>
+          <AlertDescription>
+            You can only select up to {MAX_SELECTIONS} options
+          </AlertDescription>
+        </Alert>
+      )}
     </div>
   );
 };
