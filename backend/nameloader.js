@@ -5,8 +5,7 @@ const csv = require("csv-parser");
 
 const names = [];
 
-function readCsvFile(filePath) {
-    
+async function readCsvFile(filePath) {
   return new Promise((resolve, reject) => {
     fs.createReadStream(filePath)
       .pipe(csv())
@@ -27,15 +26,25 @@ function readCsvFile(filePath) {
 }
 
 async function main() {
-  const filePath = "namelist.csv"; // Replace with the actual file path
+  const filePath = "namelist.csv";
 
-  readCsvFile(filePath)
-    .then((names) => {
-      console.log(names[0]);
-    })
-    .catch((error) => {
-      console.error("Error reading CSV file:", error);
-    });
+  const Names = prisma.name;
+
+  const names = await readCsvFile(filePath);
+
+  for (let i = 0; i < names.length; i++) {
+    const name = names[i].name;
+    const meaning = names[i].meaning;
+
+    console.log(name, meaning);
+
+    // await Names.create({
+    //   data: {
+    //     name: name,
+    //     meaning: meaning,
+    //   },
+    // });
+  }
 }
 
 main()
