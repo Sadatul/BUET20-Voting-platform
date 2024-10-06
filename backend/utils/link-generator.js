@@ -1,4 +1,4 @@
-const {PrismaClient} = require('@prisma/client')
+const {PrismaClient} = require('@prisma/client');
 const prisma = new PrismaClient();
 const crypto = require('crypto');
 const fs = require('fs');
@@ -6,7 +6,12 @@ const createCsvWriter = require('csv-writer').createObjectCsvWriter;
 require('dotenv').config();
 
 // Encryption key (use 32 bytes for AES-256)
-const ENCRYPTION_KEY = crypto.randomBytes(32); // Replace with your secure key
+const ENCRYPTION_KEY = Buffer.from(process.env.ENCRYPTION_KEY, 'base64');
+
+// Log to check the key length
+// console.log("Key length:", ENCRYPTION_KEY.length); // This should output 32
+
+
 const IV_LENGTH = 16; // AES block size
 
 const csvWriter = createCsvWriter({
@@ -110,7 +115,8 @@ async function writeRandomLinkToCsv() {
 // const link = generateLink(user);
 // console.log('Generated Link:', link);
 
-// // Decrypt the link to retrieve user information
+// Decrypt the link to retrieve user information
+// const link = 'http://batch20voting.com/?link=8f1e0a12b4a0ed6b0027c0e22eba18b6%3A0aa30c0180175fdf6b192cff9efe4db51b20fb7c989e8a6095df70efbd2cadfcfd2b657b0031d8274050996a124f0aba';
 // const encryptedLink = link.split('link=')[1]; // Get the encrypted part from the URL
 // const userInfo = decryptLink(encryptedLink);
 // console.log('Decrypted Info:', userInfo);
