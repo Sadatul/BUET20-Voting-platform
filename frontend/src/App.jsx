@@ -1,51 +1,7 @@
-// import { useState } from "react";
-// import reactLogo from "./assets/react.svg";
-// import viteLogo from "/vite.svg";
-// import "./App.css";
-// import { Button } from "@/components/ui/button";
-
-// function App() {
-//   const [count, setCount] = useState(0);
-//   const [darkMode, setDarkMode] = useState(false);
-
-//   return (
-//     <div className={darkMode ? "dark" : ""}>
-//       <div>
-//         <a href="https://vitejs.dev" target="_blank">
-//           <img src={viteLogo} className="logo" alt="Vite logo" />
-//         </a>
-//         <a href="https://react.dev" target="_blank">
-//           <img src={reactLogo} className="logo react" alt="React logo" />
-//         </a>
-//       </div>
-//       <h1>Vite + React</h1>
-//       <div className="card">
-//         <button onClick={() => setCount((count) => count + 1)}>
-//           count is {count}
-//         </button>
-//         <p>
-//           Edit <code>src/App.jsx</code> and save to test HMR
-//         </p>
-//       </div>
-//       <p className="read-the-docs">
-//         Click on the Vite and React logos to learn more
-//       </p>
-//       <Button
-//         onClick={() => {
-//           setDarkMode(!darkMode);
-//         }}
-//       >
-//         Toggle Dark Mode
-//       </Button>
-//     </div>
-//   );
-// }
-
-// export default App;
-
+/* eslint-disable no-unused-vars */
 import { useState, useEffect } from "react";
 import { create } from "zustand";
-// import axios from "axios";
+import axios from "axios";
 import {
   Collapsible,
   CollapsibleContent,
@@ -57,8 +13,10 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
 import { InfoCircledIcon } from "@radix-ui/react-icons";
 import PropTypes from "prop-types";
+import darkImg from "@/assets/download.jpg";
+import lightImg from "@/assets/list-of-2018-korean-language-films.jpg";
 
-const MAX_SELECTIONS = 5;
+const MAX_SELECTIONS = 3;
 
 // Zustand store
 const useVoteStore = create((set) => ({
@@ -78,6 +36,8 @@ const useVoteStore = create((set) => ({
       }
       return state;
     }),
+  jwtToken: null,
+  setJwtToken: (token) => set({ jwtToken: token }),
 }));
 
 const OptionItem = ({ option, index }) => {
@@ -90,22 +50,34 @@ const OptionItem = ({ option, index }) => {
     <Collapsible
       open={isOpen}
       onOpenChange={setIsOpen}
-      className="mb-2"
+      className="mb-4 w-full bg-white/30 backdrop-blur-md rounded-lg shadow-lg"
       id={`option-${index + 1}`}
     >
-      <CollapsibleTrigger className="flex items-center justify-between w-full p-2 bg-gray-100 rounded-md">
-        <span>{option.title}</span>
-        <span>{isOpen ? "▲" : "▼"}</span>
+      <CollapsibleTrigger
+        className={`flex items-center justify-between w-full p-4 ${
+          isSelected
+            ? "bg-emerald-400/70"
+            : "bg-cyan-100-400/30 hover:bg-white/50 cursor-pointer"
+        } rounded-t-lg`}
+      >
+        <span className="flex-1 text-lg font-semibold text-gray-800 dark:text-gray-500">
+          {option.title}
+        </span>
+        <span className="text-gray-800 dark:text-gray-500">
+          {isOpen ? "▲" : "▼"}
+        </span>
       </CollapsibleTrigger>
-      <CollapsibleContent className="p-2 bg-white">
-        <p>{option.description}</p>
+      <CollapsibleContent className="p-4 bg-white/20 rounded-b-lg">
+        <p className="text-gray-700 dark:text-gray-300">{option.description}</p>
         <Button
           onClick={() => {
             toggleOption(option.id);
-            // setTimeout(() => setIsOpen(!isOpen), 1000),
-            // clearTimeout();
           }}
-          className={`mt-2 ${isSelected ? "bg-green-500" : ""}`}
+          className={`mt-4 ${
+            isSelected
+              ? "bg-emerald-400/70 text-white"
+              : "bg-sky-400/70 text-white"
+          } focus:outline-none focus:ring-0 active:outline-none active:ring-0 hover:bg-sky-600/50`}
         >
           {isSelected ? "Selected" : "Select"}
         </Button>
@@ -133,11 +105,11 @@ const SideScroll = ({ totalOptions }) => {
   };
 
   return (
-    <div className="fixed right-0 top-1/2 transform -translate-y-1/2 bg-gray-200 p-2 rounded-l-md">
+    <div className="fixed right-0 top-1/2 transform -translate-y-1/2 bg-blue-400/30 backdrop-blur-md p-2 rounded-l-md shadow-lg">
       {scrollNumbers.map((number) => (
         <div
           key={number}
-          className="text-sm cursor-pointer hover:bg-gray-300 p-1"
+          className="text-sm cursor-pointer p-1 text-gray-800 dark:text-gray-200"
           onClick={() => handleScroll(number)}
         >
           {number}
@@ -185,55 +157,119 @@ const mockOptions = [
 ];
 
 const VotingPage = () => {
-  const { options, setOptions, selectedOptions } = useVoteStore();
+  const { options, setOptions, selectedOptions, jwtToken, setJwtToken } =
+    useVoteStore();
   const [showAlert, setShowAlert] = useState(false);
+  const [darkMode, setDarkMode] = useState(false);
+
+  useEffect(() => {
+    const fetchJwtToken = async () => {
+      try {
+        const response = await axios.get("/api/token");
+        setJwtToken(response.data.token);
+      } catch (error) {
+        console.error("Error fetching JWT token:", error);
+      }
+    };
+
+    fetchJwtToken();
+  }, []);
 
   useEffect(() => {
     const fetchOptions = async () => {
       try {
-        // const response = await axios.get("/api/options");
-        setOptions(mockOptions);
+        const response = await axios.get(
+          "/localhost:5000/names"
+          // {
+          //   headers: {
+          //     Authorization: `Bearer ${jwtToken}`,
+          //   },
+          // }
+        );
+        // setOptions(mockOptions);
+        setOptions(response.data);
       } catch (error) {
         console.error("Error fetching options:", error);
       }
     };
-
+    // if (jwtToken) {}
     fetchOptions();
   }, []);
 
   useEffect(() => {
     if (selectedOptions.length === MAX_SELECTIONS) {
       setShowAlert(true);
-      const timer = setTimeout(() => setShowAlert(false), 4000);
+      const timer = setTimeout(() => setShowAlert(false), 3400);
       return () => clearTimeout(timer);
     }
   }, [selectedOptions]);
 
-  const handleSubmit = () => {
-    console.log("Selected options:", selectedOptions);
-    // Here you would typically send the selectedOptions to your backend
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  }, [darkMode]);
+
+  const handleSubmit = async () => {
+    try {
+      await axios.post(
+        "/api/submit-vote",
+        { selectedOptions },
+        {
+          headers: {
+            Authorization: `Bearer ${jwtToken}`,
+          },
+        }
+      );
+      console.log("Selected options submitted successfully");
+    } catch (error) {
+      console.error("Error submitting vote:", error);
+    }
   };
 
   const progress = (selectedOptions.length / MAX_SELECTIONS) * 100;
 
   return (
-    <div className="container mx-20 p-4 pb-16">
-      <h1 className="text-2xl font-bold mb-4">Voting Options</h1>
-      <Progress value={progress} className="mb-4" />
-      <p className="mb-4">Selected: {selectedOptions.length} </p>
-      <ScrollArea className="h-[calc(100vh-200px)] p-4 w-full">
-        {options.map((option, index) => (
-          <OptionItem key={option.id} option={option} index={index} />
-        ))}
-      </ScrollArea>
+    <div
+      className="flex min-h-screen w-full flex-col items-center justify-center bg-fixed bg-center bg-cover bg-no-repeat p-4"
+      style={{
+        backgroundImage: `url(${darkMode ? darkImg : lightImg})`,
+        minHeight: "100vh",
+        minWidth: "100vw",
+      }}
+    >
+      <div className="flex flex-col items-center w-full max-w-4xl bg-blue-400 backdrop-filter bg-clip-padding backdrop-blur-md bg-opacity-15 border border-gray-100 rounded-lg shadow-lg p-6">
+        <div className="flex justify-between items-center w-full mb-4">
+          <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-200">
+            Voting Options
+          </h1>
+          {/* <Button
+            onClick={() => setDarkMode(!darkMode)}
+            className="bg-gray-800 text-white dark:bg-gray-200 dark:text-gray-800"
+          >
+            Toggle {darkMode ? "Light" : "Dark"} Mode
+          </Button> */}
+        </div>
+        <Progress value={progress} className="w-full mb-4" />
+        <p className="mb-4 text-gray-700 dark:text-gray-300">
+          Selected: {selectedOptions.length} / {MAX_SELECTIONS}
+        </p>
+        <ScrollArea className="h-[calc(100vh-350px)] w-full">
+          {options.map((option, index) => (
+            <OptionItem key={option.id} option={option} index={index} />
+          ))}
+        </ScrollArea>
+      </div>
       <SideScroll totalOptions={options.length} />
-      <div className="fixed bottom-0 left-0 right-0 bg-white p-4 border-t">
-        <Button onClick={handleSubmit} className="w-full">
+      <div className="fixed flex bottom-0 items-center justify-center left-0 right-0 bg-white/30 backdrop-blur-md p-4 border-t border-gray-200 dark:border-gray-700">
+        <Button onClick={handleSubmit} className="w-full max-w-md mx-auto">
           Submit Vote
         </Button>
       </div>
       {showAlert && (
-        <Alert className="fixed top-4 right-4 self-center w-72 bg-red-200">
+        <Alert className="fixed top-4 right-4 w-64 bg-red-400/50 backdrop-blur-sm">
           <InfoCircledIcon className="w-6 h-6" />
           <AlertTitle className="p-2">Max selections reached</AlertTitle>
           <AlertDescription>
