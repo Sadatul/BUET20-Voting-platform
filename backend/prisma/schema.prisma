@@ -30,6 +30,6 @@ model Name {
 
 model Settings {
   id        Int    @id @default(autoincrement())  // Primary key with auto-increment
-  VOTE_LIMIT Int
-  OPTION_LIMIT Int
+  VOTE_LIMIT Int   @default(5)
+  OPTION_LIMIT Int 
 }
