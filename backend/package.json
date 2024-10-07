@@ -4,10 +4,11 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "dev": "nodemon app.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "prisma": {
-    "seed": "node ./nameloader.js"
+    "seed": "node ./utils/nameloader.js ./utils/userloader.js"
   },
   "keywords": [],
   "author": "",
