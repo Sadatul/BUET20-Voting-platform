@@ -64,6 +64,41 @@ async function verifyLink(req, res) {
   });
 }
 
+async function authenticate(req,res,next){
+    console.log("Authenticating",req.headers.token);
+
+    const token = req.headers['token'];
+
+  // If the token is missing, respond with an error
+  if (!token) {
+    return res.status(401).json({
+      success: false,
+      message: 'Token missing from headers',
+    });
+  }
+
+  try {
+    // Verify the token using the secret key
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    // Attach the decoded fields (sid, email, isAdmin) to the req object
+    req.user = {
+      sid: decoded.sid,
+      email: decoded.email,
+      isAdmin: decoded.isAdmin
+    };
+
+    // Call next to pass control to the next middleware or route handler
+    next();
+  } catch (err) {
+    return res.status(403).json({
+      success: false,
+      message: 'Invalid or expired token',
+    });
+  }
+};
+
 module.exports = {
   verifyLink,
+  authenticate
 };

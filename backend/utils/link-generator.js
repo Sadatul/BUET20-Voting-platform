@@ -121,4 +121,10 @@ async function writeRandomLinkToCsv() {
 // const userInfo = decryptLink(encryptedLink);
 // console.log('Decrypted Info:', userInfo);
 
+// comment out module.exports for a while and uncomment the following
+
+// writeRandomLinkToCsv();
+
 module.exports = { decryptLink } ;
+
+// after you are done, kindly undo the process
