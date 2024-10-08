@@ -61,14 +61,14 @@ const OptionItem = ({ option, index }) => {
         } rounded-t-lg`}
       >
         <span className="flex-1 text-lg font-semibold text-gray-800 dark:text-gray-500">
-          {option.title}
+          {option.name}
         </span>
         <span className="text-gray-800 dark:text-gray-500">
           {isOpen ? "▲" : "▼"}
         </span>
       </CollapsibleTrigger>
       <CollapsibleContent className="p-4 bg-white/20 rounded-b-lg">
-        <p className="text-gray-700 dark:text-gray-300">{option.description}</p>
+        <p className="text-gray-700 dark:text-gray-300">{option.meaning}</p>
         <Button
           onClick={() => {
             toggleOption(option.id);
@@ -105,15 +105,15 @@ const SideScroll = ({ totalOptions }) => {
   };
 
   return (
-    <div className="fixed right-0 top-1/2 transform -translate-y-1/2 bg-blue-400/30 backdrop-blur-md p-2 rounded-l-md shadow-lg">
+    <div className="fixed right-0 top-1/2 transform -translate-y-1/2 bg-blue-400/30 backdrop-blur-md p-2 rounded-l-md shadow-lg flex flex-col">
       {scrollNumbers.map((number) => (
-        <div
+        <button
           key={number}
-          className="text-sm cursor-pointer p-1 text-gray-800 dark:text-gray-200"
+          className="text-sm cursor-pointer hover:bg-white/50 p-0.5 text-gray-800 dark:text-gray-200 focus:outline-none"
           onClick={() => handleScroll(number)}
         >
           {number}
-        </div>
+        </button>
       ))}
     </div>
   );
@@ -160,14 +160,31 @@ const VotingPage = () => {
   const { options, setOptions, selectedOptions, jwtToken, setJwtToken } =
     useVoteStore();
   const [showAlert, setShowAlert] = useState(false);
-  const [darkMode, setDarkMode] = useState(false);
+  // const [darkMode, setDarkMode] = useState(false);
+  const [errorAlert, setErrorAlert] = useState(null);
 
   useEffect(() => {
     const fetchJwtToken = async () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const uniqueLink = urlParams.get("link");
+      if (!uniqueLink) {
+        setErrorAlert("Unique link not found in URL");
+        console.error("Unique link not found in URL");
+        return;
+      }
+
       try {
-        const response = await axios.get("/api/token");
+        const response = await axios.get(
+          "http://localhost:5000/admin/auth/" + uniqueLink
+        );
+        if (!response.data.success) {
+          console.error("Error fetching JWT token:", response.data.message);
+          setErrorAlert("Not Verified. Please use the unique link");
+          return;
+        }
         setJwtToken(response.data.token);
       } catch (error) {
+        setErrorAlert("Error fetching JWT token");
         console.error("Error fetching JWT token:", error);
       }
     };
@@ -178,14 +195,12 @@ const VotingPage = () => {
   useEffect(() => {
     const fetchOptions = async () => {
       try {
-        const response = await axios.get(
-          "/localhost:5000/names"
-          // {
-          //   headers: {
-          //     Authorization: `Bearer ${jwtToken}`,
-          //   },
-          // }
-        );
+        const response = await axios.get("http://localhost:5000/name", {
+          headers: {
+            token: jwtToken,
+          },
+        });
+
         // setOptions(mockOptions);
         setOptions(response.data);
       } catch (error) {
@@ -204,13 +219,13 @@ const VotingPage = () => {
     }
   }, [selectedOptions]);
 
-  useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
-  }, [darkMode]);
+  // useEffect(() => {
+  //   if (darkMode) {
+  //     document.documentElement.classList.add("dark");
+  //   } else {
+  //     document.documentElement.classList.remove("dark");
+  //   }
+  // }, [darkMode]);
 
   const handleSubmit = async () => {
     try {
@@ -219,11 +234,11 @@ const VotingPage = () => {
         { selectedOptions },
         {
           headers: {
-            Authorization: `Bearer ${jwtToken}`,
+            token: jwtToken,
           },
         }
       );
-      console.log("Selected options submitted successfully");
+      console.log("Selected options submitted successfully", selectedOptions);
     } catch (error) {
       console.error("Error submitting vote:", error);
     }
@@ -235,12 +250,12 @@ const VotingPage = () => {
     <div
       className="flex min-h-screen w-full flex-col items-center justify-center bg-fixed bg-center bg-cover bg-no-repeat p-4"
       style={{
-        backgroundImage: `url(${darkMode ? darkImg : lightImg})`,
+        backgroundImage: `url(${lightImg})`,
         minHeight: "100vh",
         minWidth: "100vw",
       }}
     >
-      <div className="flex flex-col items-center w-full max-w-4xl bg-blue-400 backdrop-filter bg-clip-padding backdrop-blur-md bg-opacity-15 border border-gray-100 rounded-lg shadow-lg p-6">
+      <div className="flex flex-col items-center w-full max-w-4xl bg-blue-400 backdrop-filter bg-clip-padding backdrop-blur-md bg-opacity-15 border border-gray-100 rounded-lg shadow-lg p-4 mr-4">
         <div className="flex justify-between items-center w-full mb-4">
           <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-200">
             Voting Options
@@ -253,9 +268,27 @@ const VotingPage = () => {
           </Button> */}
         </div>
         <Progress value={progress} className="w-full mb-4" />
-        <p className="mb-4 text-gray-700 dark:text-gray-300">
-          Selected: {selectedOptions.length} / {MAX_SELECTIONS}
-        </p>
+        <div className="mb-4 text-gray-700 dark:text-gray-300 w-full">
+          {/* <p className="text-lg font-semibold mb-2">
+            Selected: {selectedOptions.length} / {MAX_SELECTIONS}
+          </p> */}
+          <div className="flex flex-wrap gap-2">
+            {selectedOptions.map((optionId) => {
+              const optionIndex = options.findIndex(
+                (opt) => opt.id === optionId
+              );
+              const option = options[optionIndex];
+              return (
+                <span
+                  key={optionId}
+                  className="bg-green-500 text-white px-3 py-1 rounded-lg shadow-md text-sm font-medium"
+                >
+                  {`${optionIndex + 1} : ${option?.name || "Unknown Option"}`}
+                </span>
+              );
+            })}
+          </div>
+        </div>
         <ScrollArea className="h-[calc(100vh-350px)] w-full">
           {options.map((option, index) => (
             <OptionItem key={option.id} option={option} index={index} />
@@ -269,12 +302,19 @@ const VotingPage = () => {
         </Button>
       </div>
       {showAlert && (
-        <Alert className="fixed top-4 right-4 w-64 bg-red-400/50 backdrop-blur-sm">
+        <Alert className="fixed top-4 right-4 w-64 bg-green-400/50 backdrop-blur-xl">
           <InfoCircledIcon className="w-6 h-6" />
           <AlertTitle className="p-2">Max selections reached</AlertTitle>
           <AlertDescription>
             You can only select up to {MAX_SELECTIONS} options
           </AlertDescription>
+        </Alert>
+      )}
+      {errorAlert && (
+        <Alert className="fixed top-4 left-4 w-64 bg-red-600/70 text-white backdrop-blur-xl">
+          <InfoCircledIcon className="w-6 h-6" />
+          <AlertTitle className="p-2">Error</AlertTitle>
+          <AlertDescription>{errorAlert}</AlertDescription>
         </Alert>
       )}
     </div>
