@@ -99,6 +99,17 @@ async function castVote(req, res) {
   }
 
   async function getVotingResult(req, res) {
+
+    const {isAdmin} = req.user ;
+
+    console.log("is Admin: ",isAdmin);
+
+    if(!isAdmin){
+      return res.json({
+        success:false,
+        message:"Not authenticated"
+      });
+    }
     
     const Name = prisma.name;
   

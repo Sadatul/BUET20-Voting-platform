@@ -11,7 +11,7 @@ nameRouter.route('/vote')
 .post(authenticate,nameController.castVote);
 
 nameRouter.route('/result')
-.get(nameController.getVotingResult);
+.get(authenticate,nameController.getVotingResult);
 
 
 
