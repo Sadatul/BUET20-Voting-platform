@@ -10,6 +10,9 @@ nameRouter.route('/')
 nameRouter.route('/vote')
 .post(authenticate,nameController.castVote);
 
+nameRouter.route('/result')
+.get(nameController.getVotingResult);
+
 
 
 module.exports = nameRouter
