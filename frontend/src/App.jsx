@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable no-unused-vars */
 import { useState, useEffect } from "react";
 import { create } from "zustand";
@@ -186,6 +187,7 @@ const VotingPage = () => {
           return;
         }
         setJwtToken(response.data.token);
+        console.log("JWT token fetched successfully", response.data.token);
       } catch (error) {
         setErrorAlert("Error fetching JWT token");
         console.error("Error fetching JWT token:", error);
@@ -193,7 +195,7 @@ const VotingPage = () => {
     };
 
     fetchJwtToken();
-  }, []);
+  }, [setJwtToken]);
 
   useEffect(() => {
     const fetchOptions = async () => {
@@ -227,8 +229,8 @@ const VotingPage = () => {
     if (selectedOptions.length === MAX_SELECTIONS) {
       console.log(`${selectedOptions}`);
       setShowAlert(true);
-      // const timer = setTimeout(() => setShowAlert(false), 3400);
-      // return () => clearTimeout(timer);
+      const timer = setTimeout(() => setShowAlert(false), 3400);
+      return () => clearTimeout(timer);
     }
   }, [selectedOptions]);
 
@@ -244,8 +246,9 @@ const VotingPage = () => {
     if (!jwtToken) {
       setErrorAlert("Not authorized. Please use the unique link");
     }
+    let response = null;
     try {
-      const response = await axios.post(
+      response = await axios.post(
         "http://localhost:5000/name/vote",
         { options: selectedOptions },
         {
@@ -254,13 +257,18 @@ const VotingPage = () => {
           },
         }
       );
-      // if (response.data.success) {
+      if (!response.data.success) {
+        setErrorAlert("Error submitting vote", response.data.message);
+        console.error("Error submitting vote:", response.data.message);
+        return;
+      }
       console.log("Selected options submitted successfully", selectedOptions);
       navigate("/vote_success", { state: { responseData: response.data } });
-      // }
+
       // console.log("Selected options submitted successfully", selectedOptions);
       // navigate("/vote_success");
     } catch (error) {
+      // setErrorAlert("Error submitting vote");
       console.error("Error submitting vote:", error);
     }
   };
