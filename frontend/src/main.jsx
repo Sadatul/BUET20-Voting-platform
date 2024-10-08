@@ -1,10 +1,28 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import App from './App.jsx'
-import './index.css'
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import VotingPage from "./App.jsx";
+import AdminPage from "@/pages/Admin.jsx";
+import VoteSuccess from "./pages/VoteSuccess.jsx";
+import "./index.css";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
 
-createRoot(document.getElementById('root')).render(
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <VotingPage />,
+  },
+  {
+    path: "/admin_res",
+    element: <AdminPage />,
+  },
+  {
+    path: "/vote_success",
+    element: <VoteSuccess />,
+  },
+]);
+
+createRoot(document.getElementById("root")).render(
   <StrictMode>
-    <App />
-  </StrictMode>,
-)
+    <RouterProvider router={router} />
+  </StrictMode>
+);
