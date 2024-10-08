@@ -194,6 +194,10 @@ const VotingPage = () => {
 
   useEffect(() => {
     const fetchOptions = async () => {
+      if (!jwtToken) {
+        return;
+      }
+
       try {
         const response = await axios.get("http://localhost:5000/name", {
           headers: {
@@ -209,13 +213,14 @@ const VotingPage = () => {
     };
     // if (jwtToken) {}
     fetchOptions();
-  }, []);
+  }, [jwtToken]);
 
   useEffect(() => {
     if (selectedOptions.length === MAX_SELECTIONS) {
+      console.log(`${selectedOptions}`);
       setShowAlert(true);
-      const timer = setTimeout(() => setShowAlert(false), 3400);
-      return () => clearTimeout(timer);
+      // const timer = setTimeout(() => setShowAlert(false), 3400);
+      // return () => clearTimeout(timer);
     }
   }, [selectedOptions]);
 
@@ -228,10 +233,13 @@ const VotingPage = () => {
   // }, [darkMode]);
 
   const handleSubmit = async () => {
+    if (!jwtToken) {
+      setErrorAlert("Not authorized. Please use the unique link");
+    }
     try {
       await axios.post(
-        "/api/submit-vote",
-        { selectedOptions },
+        "http://localhost:5000/name/vote",
+        { options: selectedOptions },
         {
           headers: {
             token: jwtToken,
