@@ -1,6 +1,6 @@
 const { PrismaClient } = require("@prisma/client");
 const { decryptLink } = require("../utils/link-generator");
-const jwt = require('jsonwebtoken');
+const jwt = require("jsonwebtoken");
 require("dotenv").config();
 const prisma = new PrismaClient();
 
@@ -17,10 +17,11 @@ async function verifyLink(req, res) {
   if (!sid || isNaN(sid) || !Number.isInteger(+sid)) {
     return res.status(400).json({
       success: false,
-      message: 'Not verified'
+      message: "Not verified",
     });
-  } 
+  }
 
+  console.log(sid, email, password);
   //  decrypted_info  {
   //     sid: '2015030',
   //     email: '2015030@urp.buet.ac.bd',
