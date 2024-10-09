@@ -113,6 +113,7 @@ async function getVotingResult(req, res) {
   }
 
   const Name = prisma.name;
+  const User = prisma.user;
 
   try {
     // Find all names and count the number of votes (voters) for each name
@@ -132,12 +133,26 @@ async function getVotingResult(req, res) {
       },
     });
 
+    // Retrieve users who have not submitted any votes
+    const usersWithoutVotes = await User.findMany({
+      where: {
+        votes: {
+          none: {}, // Users who have no entries in the _UserVotes table
+        },
+      },
+      select: {
+        sid: true,
+        email: true,
+      },
+    });
+
     // If no names are found, return an empty result
     if (!namesWithVotes || namesWithVotes.length === 0) {
       return res.status(200).json({
         success: true,
         message: "No names or votes found",
         data: [],
+        usersWithoutVotes: usersWithoutVotes,
       });
     }
 
@@ -149,11 +164,13 @@ async function getVotingResult(req, res) {
       votes: name._count.voters, // Use the counted voters as the number of votes
     }));
 
+    // console.log(usersWithoutVotes);
     // Return the sorted result
     return res.status(200).json({
       success: true,
       message: "Voting results retrieved successfully",
       data: result,
+      usersWithoutVotes: usersWithoutVotes, // Include users without votes in the response
     });
   } catch (error) {
     console.error("Error retrieving voting results:", error);
