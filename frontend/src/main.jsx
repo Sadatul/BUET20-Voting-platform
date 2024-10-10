@@ -1,7 +1,7 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import VotingPage from "./App.jsx";
-import AdminPage from "@/pages/Admin.jsx";
+import AdminPage from "./pages/Admin.jsx";
 import VoteSuccess from "./pages/VoteSuccess.jsx";
 import ErrorPage from "./pages/ErrorPage.jsx";
 import "./index.css";
