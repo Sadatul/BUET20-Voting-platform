@@ -179,7 +179,8 @@ const VotingPage = () => {
 
       try {
         const response = await axios.get(
-          "http://localhost:5000/admin/auth/" + uniqueLink
+          "https://voting-app-backend.livelytree-3847346b.southeastasia.azurecontainerapps.io/admin/auth/" +
+            uniqueLink
         );
         if (!response.data.success) {
           console.error("Error fetching JWT token:", response.data.message);
@@ -204,11 +205,14 @@ const VotingPage = () => {
       }
 
       try {
-        const response = await axios.get("http://localhost:5000/name", {
-          headers: {
-            token: jwtToken,
-          },
-        });
+        const response = await axios.get(
+          "https://voting-app-backend.livelytree-3847346b.southeastasia.azurecontainerapps.io/name",
+          {
+            headers: {
+              token: jwtToken,
+            },
+          }
+        );
 
         // setOptions(mockOptions);
         if (!response.data.success) {
@@ -249,7 +253,7 @@ const VotingPage = () => {
     let response = null;
     try {
       response = await axios.post(
-        "http://localhost:5000/name/vote",
+        "https://voting-app-backend.livelytree-3847346b.southeastasia.azurecontainerapps.io/name/vote",
         { options: selectedOptions },
         {
           headers: {

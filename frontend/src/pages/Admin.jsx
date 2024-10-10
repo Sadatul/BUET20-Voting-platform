@@ -127,11 +127,14 @@ const AdminPage = () => {
         return;
       }
       try {
-        const response = await axios.get("http://localhost:5000/name/result", {
-          headers: {
-            token: jwtToken,
-          },
-        });
+        const response = await axios.get(
+          "https://voting-app-backend.livelytree-3847346b.southeastasia.azurecontainerapps.io/name/result",
+          {
+            headers: {
+              token: jwtToken,
+            },
+          }
+        );
         setResults(response.data.data);
         setUsersWithoutVotes(response.data.usersWithoutVotes);
       } catch (error) {
